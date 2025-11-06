@@ -22,7 +22,7 @@ export function generateOutboundTwiML(
   // Start with greeting
   response.say(
     {
-      voice: 'salli',
+      voice: 'Polly.Salli',
       language: 'en-US',
     },
     `Hello! This is ${config.COMPANY_NAME} calling. Is this a good time to talk?`,
@@ -40,7 +40,7 @@ export function generateOutboundTwiML(
   // Fallback if no response - more natural
   response.say(
     {
-      voice: 'salli',
+      voice: 'Polly.Salli',
       language: 'en-US',
     },
     'Thanks for taking the call. Have a great day!',
@@ -65,7 +65,7 @@ export function generateConversationalTwiML(
     if (!callSid) {
       // Fallback if no call_sid
       response.say({
-        voice: 'salli',
+        voice: 'Polly.Salli',
         language: 'en-US',
       }, 'Hello! This is ' + config.COMPANY_NAME + ' calling. Is this a good time to talk?');
       const gather = response.gather({
@@ -108,7 +108,7 @@ export function generateConversationalTwiML(
     );
     response.say(
       {
-        voice: 'salli',
+        voice: 'Polly.Salli',
         language: 'en-US',
       },
       optOutResponse.message,
@@ -120,7 +120,7 @@ export function generateConversationalTwiML(
   // Speak the response
   response.say(
     {
-      voice: 'salli',
+      voice: 'Polly.Salli',
       language: 'en-US',
     },
     conversation.message,
@@ -147,7 +147,7 @@ export function generateConversationalTwiML(
     const prompt = naturalPrompts[Math.floor(Math.random() * naturalPrompts.length)];
     gather.say(
       {
-        voice: 'salli',
+        voice: 'Polly.Salli',
         language: 'en-US',
       },
       prompt,
@@ -157,7 +157,7 @@ export function generateConversationalTwiML(
     if (conversation.nextStep === 'qualify' || conversation.nextStep === 'schedule') {
       response.say(
         {
-          voice: 'salli',
+          voice: 'Polly.Salli',
           language: 'en-US',
         },
         'I understand if now isn\'t a great time. No worries at all. Thanks for taking the call, and have a wonderful day!',
@@ -165,7 +165,7 @@ export function generateConversationalTwiML(
     } else {
       response.say(
         {
-          voice: 'salli',
+          voice: 'Polly.Salli',
           language: 'en-US',
         },
         'Thanks so much for your time. Have a great day!',
@@ -183,7 +183,7 @@ export function generateConversationalTwiML(
     const config = getEnvConfig();
     const response = new VoiceResponse();
     response.say({
-      voice: 'salli',
+      voice: 'Polly.Salli',
       language: 'en-US',
     }, `Hello! This is ${config.COMPANY_NAME} calling. Is this a good time to talk?`);
     const gather = response.gather({
@@ -224,7 +224,7 @@ export function generateDemoPromptTwiML(recordingEnabled: boolean = false): stri
   // Demo prompt: discovery invitation
   response.say(
     {
-      voice: 'salli',
+      voice: 'Polly.Salli',
       language: 'en-US',
     },
     `Thank you. We'd like to invite you to a brief discovery meeting where we can discuss how ${config.COMPANY_NAME} can help address your needs. ` +
@@ -244,7 +244,7 @@ export function generateDemoPromptTwiML(recordingEnabled: boolean = false): stri
 
   gather.say(
     {
-      voice: 'salli',
+      voice: 'Polly.Salli',
       language: 'en-US',
     },
     'I\'d love to hear your thoughts. If you\'re interested, just let me know. Or if you\'d prefer not to receive these calls, you can say "stop" or "remove me".',
@@ -253,7 +253,7 @@ export function generateDemoPromptTwiML(recordingEnabled: boolean = false): stri
   // Handle timeout
   response.say(
     {
-      voice: 'salli',
+      voice: 'Polly.Salli',
       language: 'en-US',
     },
     'Thank you for your time. Have a great day.',
@@ -273,7 +273,7 @@ export function generateOptOutTwiML(): string {
 
   response.say(
     {
-      voice: 'salli',
+      voice: 'Polly.Salli',
       language: 'en-US',
     },
     `I've noted your request. You will not receive further automated calls from ${config.COMPANY_NAME}. ` +
@@ -285,7 +285,7 @@ export function generateOptOutTwiML(): string {
 
   response.say(
     {
-      voice: 'salli',
+      voice: 'Polly.Salli',
       language: 'en-US',
     },
     'Thank you. Goodbye.',

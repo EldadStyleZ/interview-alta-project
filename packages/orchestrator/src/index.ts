@@ -262,7 +262,7 @@ app.post('/twilio/voice/incoming', verifyTwilioSignature, (req: Request, res: Re
     const VoiceResponse = twilio.twiml.VoiceResponse;
     const response = new VoiceResponse();
     response.say({
-      voice: 'salli',
+      voice: 'Polly.Salli',
       language: 'en-US',
     }, 'Sorry, an error occurred. Goodbye.');
     response.hangup();
