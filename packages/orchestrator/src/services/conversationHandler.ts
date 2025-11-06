@@ -167,7 +167,7 @@ export function generateConversationalResponse(
           // User said no to "is this a good time"
           updateConversationState(state.call_sid, { step: 'end' });
           return {
-            message: 'I understand. Perhaps another time would work better. Thank you for your time. Goodbye.',
+            message: 'I totally understand. No worries at all. Thanks for taking the call. Have a great day!',
             nextStep: 'end',
             shouldEnd: true,
           };
@@ -195,8 +195,8 @@ export function generateConversationalResponse(
         });
         return {
           message: 'Perfect! Thank you. ' +
-            `We'd like to invite you to a brief discovery meeting where we can discuss how ${config.COMPANY_NAME} can help address your needs. ` +
-            'This would be a 30-minute conversation at a time that works for you. Would you be interested in scheduling this meeting?',
+            `I'm calling from ${config.COMPANY_NAME}, and we help businesses like yours tackle some common challenges. ` +
+            'I\'d love to offer you a quick 30-minute conversation where we can explore if there\'s a good fit. Would that be something you\'d be open to?',
           nextStep: 'interest',
           shouldEnd: false,
         };
@@ -206,18 +206,18 @@ export function generateConversationalResponse(
           step: 'interest',
         });
         return {
-          message: 'I understand. No problem. ' +
-            `We'd like to invite you to a brief discovery meeting where we can discuss how ${config.COMPANY_NAME} can help address your needs. ` +
-            'This would be a 30-minute conversation at a time that works for you. Would you be interested in scheduling this meeting?',
+          message: 'No problem at all. I completely understand. ' +
+            `I'm calling from ${config.COMPANY_NAME}, and we work with businesses to solve some common challenges. ` +
+            'Would you be open to a quick 30-minute conversation to see if there might be a good fit?',
           nextStep: 'interest',
           shouldEnd: false,
         };
       } else {
-        return {
-          message: 'For quality assurance, may I record this call? You can say yes or no.',
-          nextStep: 'recording_consent',
-          shouldEnd: false,
-        };
+          return {
+            message: 'Would it be okay if I record this call for quality purposes? You can say yes or no.',
+            nextStep: 'recording_consent',
+            shouldEnd: false,
+          };
       }
 
     case 'consent':
@@ -229,8 +229,8 @@ export function generateConversationalResponse(
         });
         return {
           message: 'Perfect! Thank you. ' +
-            `We'd like to invite you to a brief discovery meeting where we can discuss how ${config.COMPANY_NAME} can help address your needs. ` +
-            'This would be a 30-minute conversation at a time that works for you. Would you be interested in scheduling this meeting?',
+            `I'm calling from ${config.COMPANY_NAME}, and we help businesses like yours tackle some common challenges. ` +
+            'I\'d love to offer you a quick 30-minute conversation where we can explore if there\'s a good fit. Would that be something you\'d be open to?',
           nextStep: 'interest',
           shouldEnd: false,
         };
@@ -240,18 +240,18 @@ export function generateConversationalResponse(
           step: 'interest',
         });
         return {
-          message: 'I understand. No problem. ' +
-            `We'd like to invite you to a brief discovery meeting where we can discuss how ${config.COMPANY_NAME} can help address your needs. ` +
-            'This would be a 30-minute conversation at a time that works for you. Would you be interested in scheduling this meeting?',
+          message: 'No problem at all. I completely understand. ' +
+            `I'm calling from ${config.COMPANY_NAME}, and we work with businesses to solve some common challenges. ` +
+            'Would you be open to a quick 30-minute conversation to see if there might be a good fit?',
           nextStep: 'interest',
           shouldEnd: false,
         };
       } else {
-        return {
-          message: 'For quality assurance, may I record this call? You can say yes or no.',
-          nextStep: 'recording_consent',
-          shouldEnd: false,
-        };
+          return {
+            message: 'Would it be okay if I record this call for quality purposes? You can say yes or no.',
+            nextStep: 'recording_consent',
+            shouldEnd: false,
+          };
       }
 
     case 'interest':
