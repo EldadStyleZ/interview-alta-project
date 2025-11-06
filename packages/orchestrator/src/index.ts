@@ -226,26 +226,8 @@ app.post('/twilio/voice/incoming', verifyTwilioSignature, (req: Request, res: Re
       );
       
       // Extract AI response from conversation state and save to transcript
-      if (conversationCallSid && speechResult) {
-        try {
-          const { getConversationState, generateConversationalResponse } = require('./services/conversationHandler.js');
-          const state = getConversationState(conversationCallSid);
-          const response = generateConversationalResponse(state, speechResult);
-          if (response.message) {
-            saveTranscriptEntry({
-              call_id: conversationCallSid,
-              timestamp: new Date().toISOString(),
-              text: response.message,
-              speaker: 'ai',
-              is_final: true,
-            });
-          }
-        } catch (error) {
-          // If we can't extract AI response, that's okay - continue
-          // eslint-disable-next-line no-console
-          console.error('Error saving AI transcript:', error);
-        }
-      }
+      // Note: We'll save the AI response after it's generated in generateConversationalTwiML
+      // For now, we just save user speech here
       
       return res.send(twiml);
     }

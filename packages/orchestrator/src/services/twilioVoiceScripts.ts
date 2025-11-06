@@ -6,6 +6,7 @@ import {
   generateConversationalResponse,
   parseUserIntent,
 } from './conversationHandler.js';
+import { saveTranscriptEntry } from './transcriptStorage.js';
 
 const VoiceResponse = twilio.twiml.VoiceResponse;
 
@@ -115,6 +116,23 @@ export function generateConversationalTwiML(
     );
     response.hangup();
     return response.toString();
+  }
+
+  // Save AI response to transcript
+  if (conversation.message) {
+    try {
+      saveTranscriptEntry({
+        call_id: callSid,
+        timestamp: new Date().toISOString(),
+        text: conversation.message,
+        speaker: 'ai',
+        is_final: true,
+      });
+    } catch (error) {
+      // If transcript save fails, continue anyway
+      // eslint-disable-next-line no-console
+      console.error('Error saving AI transcript:', error);
+    }
   }
 
   // Speak the response
