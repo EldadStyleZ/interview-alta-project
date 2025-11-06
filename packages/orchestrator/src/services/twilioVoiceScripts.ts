@@ -37,13 +37,13 @@ export function generateOutboundTwiML(
     method: 'POST',
   });
 
-  // Fallback if no response
+  // Fallback if no response - more natural
   response.say(
     {
       voice: 'alice',
       language: 'en-US',
     },
-    'Thank you for your time. Goodbye.',
+    'Thanks for taking the call. Have a great day!',
   );
   response.hangup();
 
@@ -137,23 +137,30 @@ export function generateConversationalTwiML(
       finishOnKey: '#',
     });
 
-    // Small prompt to encourage response
+    // Small prompt to encourage response - more natural and human-like
+    const naturalPrompts = [
+      "What do you think?",
+      "How does that sound?",
+      "Does that work for you?",
+      "What's your take on that?",
+    ];
+    const prompt = naturalPrompts[Math.floor(Math.random() * naturalPrompts.length)];
     gather.say(
       {
         voice: 'alice',
         language: 'en-US',
       },
-      'Please let me know.',
+      prompt,
     );
 
-    // Handle timeout - move to next step or end
+    // Handle timeout - move to next step or end - more natural
     if (conversation.nextStep === 'qualify' || conversation.nextStep === 'schedule') {
       response.say(
         {
           voice: 'alice',
           language: 'en-US',
         },
-        'I understand if now is not a good time. Thank you for your time. Have a great day.',
+        'I understand if now isn\'t a great time. No worries at all. Thanks for taking the call, and have a wonderful day!',
       );
     } else {
       response.say(
@@ -161,7 +168,7 @@ export function generateConversationalTwiML(
           voice: 'alice',
           language: 'en-US',
         },
-        'Thank you. Goodbye.',
+        'Thanks so much for your time. Have a great day!',
       );
     }
     response.hangup();
@@ -240,7 +247,7 @@ export function generateDemoPromptTwiML(recordingEnabled: boolean = false): stri
       voice: 'alice',
       language: 'en-US',
     },
-    'Please let me know if you are interested, or say "stop" or "remove me" if you would like to opt out.',
+    'I\'d love to hear your thoughts. If you\'re interested, just let me know. Or if you\'d prefer not to receive these calls, you can say "stop" or "remove me".',
   );
 
   // Handle timeout

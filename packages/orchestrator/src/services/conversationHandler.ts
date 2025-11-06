@@ -71,16 +71,16 @@ export function parseUserIntent(speechResult: string): {
     }
   }
 
-  // Yes/positive responses
-  const yesKeywords = ['yes', 'yeah', 'yep', 'sure', 'okay', 'ok', 'interested', 'sounds good', 'that works', 'absolutely'];
+  // Yes/positive responses - expanded for more natural recognition
+  const yesKeywords = ['yes', 'yeah', 'yep', 'sure', 'okay', 'ok', 'interested', 'sounds good', 'that works', 'absolutely', 'definitely', 'sounds great', 'i\'d like that', 'that would be great', 'let\'s do it'];
   for (const keyword of yesKeywords) {
     if (lower.includes(keyword)) {
       return { intent: 'yes', keywords: [keyword] };
     }
   }
 
-  // No/negative responses
-  const noKeywords = ['no', 'nope', 'nah', "don't", 'not interested', 'not right now', 'maybe later'];
+  // No/negative responses - expanded for more natural recognition
+  const noKeywords = ['no', 'nope', 'nah', "don't", 'not interested', 'not right now', 'maybe later', 'not really', 'probably not', 'i don\'t think so', 'not at this time'];
   for (const keyword of noKeywords) {
     if (lower.includes(keyword)) {
       if (lower.includes('maybe')) {
@@ -158,11 +158,11 @@ export function generateConversationalResponse(
         if (intent.intent === 'yes') {
           // User said yes to "is this a good time"
           updateConversationState(state.call_sid, { step: 'recording_consent' });
-          return {
-            message: 'Great! Thank you. For quality assurance, may I record this call? You can say yes or no.',
-            nextStep: 'recording_consent',
-            shouldEnd: false,
-          };
+        return {
+          message: 'Great! Thanks for taking the time. Before we continue, would it be okay if I record this call for quality purposes? You can say yes or no.',
+          nextStep: 'recording_consent',
+          shouldEnd: false,
+        };
         } else if (intent.intent === 'no') {
           // User said no to "is this a good time"
           updateConversationState(state.call_sid, { step: 'end' });
@@ -172,9 +172,9 @@ export function generateConversationalResponse(
             shouldEnd: true,
           };
         } else {
-          // Unclear response, ask again
+          // Unclear response, ask again - more natural
           return {
-            message: 'I just want to make sure this is a good time for a quick conversation. Is now okay?',
+            message: 'I just want to make sure I\'m not catching you at a bad time. Is now okay for a quick chat?',
             nextStep: 'greeting',
             shouldEnd: false,
           };
@@ -276,9 +276,9 @@ export function generateConversationalResponse(
 
       const greetingName = state.name ? `, ${state.name}` : '';
       return {
-        message: `Thank you${greetingName}. ${config.COMPANY_NAME} helps businesses like yours solve important challenges. ` +
-          `We'd like to offer you a brief, 30-minute discovery meeting where we can discuss how we might help. ` +
-          `Would you be interested in learning more?`,
+        message: `Thanks${greetingName}. So ${config.COMPANY_NAME} works with companies to solve some pretty common challenges they face. ` +
+          `I'd love to offer you a quick 30-minute chat where we can explore if there's a good fit. ` +
+          `Would that be something you'd be interested in?`,
         nextStep: 'qualify',
         shouldEnd: false,
       };
@@ -286,7 +286,7 @@ export function generateConversationalResponse(
     case 'qualify':
       if (!userInput) {
         return {
-          message: 'Would you be interested in a brief discovery meeting?',
+          message: 'Would you be open to a quick 30-minute conversation to see if there might be a good fit?',
           nextStep: 'qualify',
           shouldEnd: false,
         };
@@ -298,15 +298,15 @@ export function generateConversationalResponse(
           step: 'schedule',
         });
         return {
-          message: 'Excellent! When would be a good time for you? I can offer times today or tomorrow. ' +
-            'For example, you could say "tomorrow at 2pm" or "today afternoon".',
+          message: 'That\'s great! I\'m glad you\'re interested. When would work best for you? ' +
+            'I can do today or tomorrow - just let me know what time works. For example, you could say "tomorrow at 2pm" or "today afternoon".',
           nextStep: 'schedule',
           shouldEnd: false,
         };
       } else if (intent?.intent === 'maybe') {
         updateConversationState(state.call_sid, { interest_level: 'maybe' });
         return {
-          message: 'I understand. Is there a better time we could reach out? Or would you like me to send you some information via email?',
+          message: 'I totally get that. Would it help if I sent you some information first? Or maybe there\'s a better time to reach out?',
           nextStep: 'qualify',
           shouldEnd: false,
         };
@@ -316,20 +316,21 @@ export function generateConversationalResponse(
           step: 'end',
         });
         return {
-          message: 'I completely understand. Thank you for your time. If you change your mind, feel free to reach out. Have a great day!',
+          message: 'I completely understand. No worries at all. Thanks for taking the time to chat. If anything changes, feel free to reach out. Have a wonderful day!',
           nextStep: 'end',
           shouldEnd: true,
         };
       } else if (intent?.intent === 'question') {
         return {
-          message: 'That\'s a great question. Let me send you some information about what we do. ' +
-            'Would you be interested in a brief call to discuss further?',
+          message: 'That\'s a really good question. I\'d be happy to send you some information that might help answer that. ' +
+            'Would you be open to a quick call after you\'ve had a chance to look it over?',
           nextStep: 'qualify',
           shouldEnd: false,
         };
       } else {
         return {
-          message: 'I\'d love to tell you more about how we can help. Would a 30-minute discovery meeting work for you?',
+          message: 'I\'d love to share a bit more about what we do and see if it might be a good fit. ' +
+            'Would a quick 30-minute conversation work for you?',
           nextStep: 'qualify',
           shouldEnd: false,
         };
@@ -338,35 +339,43 @@ export function generateConversationalResponse(
     case 'schedule':
       if (!userInput) {
         return {
-          message: 'When would be a good time for you? I can offer times today or tomorrow.',
+          message: 'What time would work best for you? I can do today or tomorrow - whatever fits your schedule.',
           nextStep: 'schedule',
           shouldEnd: false,
         };
       }
 
-      // Extract time preference
-      const timeMatch = userInput.match(/(today|tomorrow|morning|afternoon|evening|2pm|3pm|4pm|10am|11am)/i);
+      // Extract time preference - expanded to handle more natural expressions
+      const timeMatch = userInput.match(/(today|tomorrow|morning|afternoon|evening|2pm|3pm|4pm|10am|11am|later|next week|monday|tuesday|wednesday|thursday|friday)/i);
       if (timeMatch) {
         updateConversationState(state.call_sid, {
           time_preference: timeMatch[0],
           step: 'confirm',
         });
         return {
-          message: `Perfect! I've noted ${timeMatch[0]} as your preferred time. ` +
-            `I'll send you a calendar invitation with the details. Does that work for you?`,
+          message: `Perfect! So ${timeMatch[0]} works for you. ` +
+            `I'll send over a calendar invite with all the details. Sound good?`,
           nextStep: 'confirm',
           shouldEnd: false,
         };
       } else if (intent?.intent === 'yes') {
         // User said yes but didn't specify time
         return {
-          message: 'Great! What time would work best for you? For example, tomorrow at 2pm or today afternoon?',
+          message: 'Awesome! What time would work best? I can do today or tomorrow - just let me know what works for you.',
+          nextStep: 'schedule',
+          shouldEnd: false,
+        };
+      } else if (intent?.intent === 'no') {
+        // User declined the time - offer reschedule
+        updateConversationState(state.call_sid, { step: 'schedule' });
+        return {
+          message: 'No problem! Would a different time work better? What would be convenient for you?',
           nextStep: 'schedule',
           shouldEnd: false,
         };
       } else {
         return {
-          message: 'I can offer times today or tomorrow. What works best for your schedule?',
+          message: 'I can do today or tomorrow - whatever works best for you. What time would be good?',
           nextStep: 'schedule',
           shouldEnd: false,
         };
@@ -375,22 +384,23 @@ export function generateConversationalResponse(
     case 'confirm':
       if (intent?.intent === 'yes') {
         updateConversationState(state.call_sid, { step: 'end' });
+        const namePart = state.name ? `, ${state.name}` : '';
         return {
-          message: `Wonderful! I'll send you a calendar invitation right away. ` +
-            `Thank you so much for your time, ${state.name || 'and have a great day'}!`,
+          message: `Perfect! I'll get that calendar invite sent over right away. ` +
+            `Thanks so much for your time${namePart} - really appreciate it. Have a great day!`,
           nextStep: 'end',
           shouldEnd: true,
         };
       } else if (intent?.intent === 'no') {
         updateConversationState(state.call_sid, { step: 'schedule' });
         return {
-          message: 'No problem. Would a different time work better?',
+          message: 'No worries at all. What time would work better for you?',
           nextStep: 'schedule',
           shouldEnd: false,
         };
       } else {
         return {
-          message: 'Does that time work for you?',
+          message: 'Does that time work for you, or would you prefer something else?',
           nextStep: 'confirm',
           shouldEnd: false,
         };
@@ -399,8 +409,8 @@ export function generateConversationalResponse(
     case 'opt_out':
       updateConversationState(state.call_sid, { step: 'end' });
       return {
-        message: `I've noted your request. You will not receive further automated calls from ${config.COMPANY_NAME}. ` +
-          'Thank you for your time. Goodbye.',
+        message: `I've got that noted. You won't receive any more automated calls from ${config.COMPANY_NAME}. ` +
+          'Thanks for letting me know, and have a great day.',
         nextStep: 'end',
         shouldEnd: true,
       };
