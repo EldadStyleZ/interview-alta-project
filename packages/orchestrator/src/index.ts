@@ -40,6 +40,7 @@ import { scheduleAttempt, recordAttempt, isVoicemailAllowedForLead, type Schedul
 import { verifyTwilioSignature } from './middleware/verifyTwilioSignature.js';
 import { createOutboundCall } from './services/twilioOutbound.js';
 import { getEnvConfig } from './config/env.js';
+import { saveTranscriptEntry, markCallEnded, getTranscript, getTranscriptText, listTranscripts } from './services/transcriptStorage.js';
 import {
   generateOutboundTwiML,
   generateDemoPromptTwiML,
@@ -207,11 +208,45 @@ app.post('/twilio/voice/incoming', verifyTwilioSignature, (req: Request, res: Re
         return res.send(twiml);
       }
       
+      // Save user speech to transcript
+      if (speechResult && conversationCallSid) {
+        saveTranscriptEntry({
+          call_id: conversationCallSid,
+          timestamp: new Date().toISOString(),
+          text: speechResult,
+          speaker: 'user',
+          is_final: true,
+        });
+      }
+      
       const twiml = generateConversationalTwiML(
         conversationCallSid,
         speechResult,
         (req.query.recording as string || req.body.recording as string) === 'yes',
       );
+      
+      // Extract AI response from conversation state and save to transcript
+      if (conversationCallSid && speechResult) {
+        try {
+          const { getConversationState, generateConversationalResponse } = await import('./services/conversationHandler.js');
+          const state = getConversationState(conversationCallSid);
+          const response = generateConversationalResponse(state, speechResult);
+          if (response.message) {
+            saveTranscriptEntry({
+              call_id: conversationCallSid,
+              timestamp: new Date().toISOString(),
+              text: response.message,
+              speaker: 'ai',
+              is_final: true,
+            });
+          }
+        } catch (error) {
+          // If we can't extract AI response, that's okay - continue
+          // eslint-disable-next-line no-console
+          console.error('Error saving AI transcript:', error);
+        }
+      }
+      
       return res.send(twiml);
     }
 
@@ -243,6 +278,20 @@ app.post('/twilio/voice/incoming', verifyTwilioSignature, (req: Request, res: Re
         correlation_id: (req as any).correlationId,
       }));
     }
+    
+    // Save initial greeting to transcript
+    if (callSid) {
+      const { getEnvConfig } = await import('./config/env.js');
+      const config = getEnvConfig();
+      saveTranscriptEntry({
+        call_id: callSid,
+        timestamp: new Date().toISOString(),
+        text: `Hello! This is ${config.COMPANY_NAME} calling. Is this a good time to talk?`,
+        speaker: 'ai',
+        is_final: true,
+      });
+    }
+    
     const twiml = generateOutboundTwiML('pending', callSid);
     return res.send(twiml);
   } catch (error) {
@@ -294,6 +343,11 @@ app.post('/twilio/voice/status', verifyTwilioSignature, async (req: Request, res
     };
 
     const eventType = statusMap[callStatus] || 'failed';
+
+    // Mark call as ended in transcript if completed
+    if (callStatus === 'completed' && callSid) {
+      markCallEnded(callSid);
+    }
 
     // Log call status (without secrets)
     const cid = (req as any).correlationId;
@@ -1593,6 +1647,76 @@ app.post('/dev/simulate-call', async (req: Request, res: Response) => {
     console.error(JSON.stringify({ level: 'error', msg: (error as Error).message, stack: (error as Error).stack, correlation_id: cid }));
     return res.status(500).json({
       error: 'Internal error simulating call',
+      correlation_id: cid,
+    });
+  }
+});
+
+// Transcript retrieval endpoints
+app.get('/api/transcripts/:call_id', (req: Request, res: Response) => {
+  try {
+    const callId = req.params.call_id;
+    const transcript = getTranscript(callId);
+    
+    if (!transcript) {
+      return res.status(404).json({
+        error: 'Transcript not found',
+        call_id: callId,
+      });
+    }
+    
+    return res.status(200).json(transcript);
+  } catch (error) {
+    const cid = (req as any).correlationId;
+    // eslint-disable-next-line no-console
+    console.error(JSON.stringify({ level: 'error', msg: (error as Error).message, stack: (error as Error).stack, correlation_id: cid }));
+    return res.status(500).json({
+      error: 'Internal error retrieving transcript',
+      correlation_id: cid,
+    });
+  }
+});
+
+app.get('/api/transcripts/:call_id/text', (req: Request, res: Response) => {
+  try {
+    const callId = req.params.call_id;
+    const text = getTranscriptText(callId);
+    
+    if (!text) {
+      return res.status(404).json({
+        error: 'Transcript not found',
+        call_id: callId,
+      });
+    }
+    
+    return res.status(200).json({
+      call_id: callId,
+      transcript: text,
+    });
+  } catch (error) {
+    const cid = (req as any).correlationId;
+    // eslint-disable-next-line no-console
+    console.error(JSON.stringify({ level: 'error', msg: (error as Error).message, stack: (error as Error).stack, correlation_id: cid }));
+    return res.status(500).json({
+      error: 'Internal error retrieving transcript',
+      correlation_id: cid,
+    });
+  }
+});
+
+app.get('/api/transcripts', (req: Request, res: Response) => {
+  try {
+    const callIds = listTranscripts();
+    return res.status(200).json({
+      count: callIds.length,
+      call_ids: callIds,
+    });
+  } catch (error) {
+    const cid = (req as any).correlationId;
+    // eslint-disable-next-line no-console
+    console.error(JSON.stringify({ level: 'error', msg: (error as Error).message, stack: (error as Error).stack, correlation_id: cid }));
+    return res.status(500).json({
+      error: 'Internal error listing transcripts',
       correlation_id: cid,
     });
   }
