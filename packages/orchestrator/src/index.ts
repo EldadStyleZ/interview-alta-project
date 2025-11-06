@@ -228,7 +228,7 @@ app.post('/twilio/voice/incoming', verifyTwilioSignature, (req: Request, res: Re
       // Extract AI response from conversation state and save to transcript
       if (conversationCallSid && speechResult) {
         try {
-          const { getConversationState, generateConversationalResponse } = await import('./services/conversationHandler.js');
+          const { getConversationState, generateConversationalResponse } = require('./services/conversationHandler.js');
           const state = getConversationState(conversationCallSid);
           const response = generateConversationalResponse(state, speechResult);
           if (response.message) {
@@ -281,7 +281,6 @@ app.post('/twilio/voice/incoming', verifyTwilioSignature, (req: Request, res: Re
     
     // Save initial greeting to transcript
     if (callSid) {
-      const { getEnvConfig } = await import('./config/env.js');
       const config = getEnvConfig();
       saveTranscriptEntry({
         call_id: callSid,
