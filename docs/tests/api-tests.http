@@ -1,0 +1,292 @@
+###
+# AI-Driven Outbound Booking API Test Collection
+# REST Client format - can be used with VS Code REST Client extension or IntelliJ HTTP Client
+# Base URL is configured via environment variable or defaults to localhost:3000
+###
+
+@baseUrl = http://localhost:3000
+@managerId = 0051234567890XYZ
+@leadId = 00Q000000000001
+@callId = call-123456
+
+### Variables
+@leadIdNA = 00Q000000000001
+@leadIdEMEA = 00Q000000000004
+@bookingId = booking-test-123
+
+###
+### 1. Health Check
+###
+GET {{baseUrl}}/healthz
+
+###
+### 2. Policy Check - Pre-dial (should pass)
+###
+POST {{baseUrl}}/policy/check
+Content-Type: application/json
+
+{
+  "gate": "preDial",
+  "context": {
+    "lead_id": "{{leadId}}",
+    "attempt_no": 1,
+    "last_attempt_ts": null,
+    "dnc_flag": false,
+    "local_time": "14:00",
+    "region": "US_EAST"
+  }
+}
+
+###
+### 3. Policy Check - Pre-dial (should block - DNC)
+###
+POST {{baseUrl}}/policy/check
+Content-Type: application/json
+
+{
+  "gate": "preDial",
+  "context": {
+    "lead_id": "{{leadId}}",
+    "attempt_no": 1,
+    "last_attempt_ts": null,
+    "dnc_flag": true,
+    "local_time": "14:00",
+    "region": "US_EAST"
+  }
+}
+
+###
+### 4. Policy Check - Pre-booking (should pass)
+###
+POST {{baseUrl}}/policy/check
+Content-Type: application/json
+
+{
+  "gate": "preBooking",
+  "context": {
+    "booking_id": "{{bookingId}}",
+    "explicit_confirmation": true,
+    "confirmed_date": "2024-03-15T14:00:00.000Z",
+    "confirmed_time": "2024-03-15T14:00:00.000Z",
+    "qualification_flags": {
+      "authority": true,
+      "need": "high",
+      "timing": "this_quarter",
+      "budget_indicator": "present"
+    }
+  }
+}
+
+###
+### 5. Seed Manager Calendar
+###
+POST {{baseUrl}}/dev/seed/managerCalendar
+Content-Type: application/json
+
+{
+  "manager_id": "{{managerId}}"
+}
+
+###
+### 6. Seed Test Leads
+###
+POST {{baseUrl}}/dev/seed/leads
+Content-Type: application/json
+
+{}
+
+###
+### 7. Get Availability
+###
+GET {{baseUrl}}/availability?manager_id={{managerId}}&from=2024-03-15T00:00:00.000Z&to=2024-03-17T00:00:00.000Z
+
+###
+### 8. Place Calendar Hold
+###
+POST {{baseUrl}}/holds
+Content-Type: application/json
+
+{
+  "manager_id": "{{managerId}}",
+  "start_utc": "2024-03-15T14:00:00.000Z",
+  "end_utc": "2024-03-15T14:30:00.000Z",
+  "ttl_seconds": 1800
+}
+
+###
+### 9. Create Calendar Event
+###
+POST {{baseUrl}}/events
+Content-Type: application/json
+
+{
+  "meeting_id": "meeting-test-123",
+  "manager_id": "{{managerId}}",
+  "contact_email": "test@example.com",
+  "title": "Discovery Meeting",
+  "start_utc": "2024-03-15T15:00:00.000Z",
+  "end_utc": "2024-03-15T15:30:00.000Z",
+  "location": null,
+  "meeting_url": null,
+  "timezone": "UTC",
+  "description": "Test meeting",
+  "invitees_emails": ["test@example.com"],
+  "source_system": "ai-outbound"
+}
+
+###
+### 10. Create Booking (Full Flow)
+###
+POST {{baseUrl}}/book
+Content-Type: application/json
+
+{
+  "lead_id": "{{leadIdNA}}",
+  "manager_id": "{{managerId}}",
+  "preferred_windows": [
+    {
+      "from": "2024-03-15T13:00:00.000Z",
+      "to": "2024-03-15T18:00:00.000Z"
+    }
+  ],
+  "confirm": true,
+  "explicit_confirmation": true,
+  "confirmed_date": "2024-03-15T14:00:00.000Z",
+  "confirmed_time": "2024-03-15T14:00:00.000Z",
+  "qualification_flags": {
+    "authority": true,
+    "need": "high",
+    "timing": "this_quarter",
+    "budget_indicator": "present"
+  }
+}
+
+###
+### 11. Create Booking (Hold Only - No Confirmation)
+###
+POST {{baseUrl}}/book
+Content-Type: application/json
+
+{
+  "lead_id": "{{leadIdEMEA}}",
+  "manager_id": "{{managerId}}",
+  "preferred_windows": [
+    {
+      "from": "2024-03-16T13:00:00.000Z",
+      "to": "2024-03-16T18:00:00.000Z"
+    }
+  ],
+  "confirm": false,
+  "qualification_flags": {
+    "authority": true,
+    "need": "medium"
+  }
+}
+
+###
+### 12. Get Metrics Summary
+###
+GET {{baseUrl}}/metrics/summary
+
+###
+### 13. Schedule Attempt (First Attempt)
+###
+POST {{baseUrl}}/attempts/schedule
+Content-Type: application/json
+
+{
+  "lead_id": "{{leadIdNA}}",
+  "region": "US_EAST"
+}
+
+###
+### 14. Voice Answer (Create Call Session)
+###
+POST {{baseUrl}}/voice/answer
+Content-Type: application/json
+
+{
+  "lead_id": "{{leadIdNA}}",
+  "phone_number": "+12025551234",
+  "attempt_no": 1,
+  "manager_id": "{{managerId}}"
+}
+
+###
+### 15. Voice Events (Call Connected)
+###
+POST {{baseUrl}}/voice/events
+Content-Type: application/json
+
+{
+  "call_id": "{{callId}}",
+  "event_type": "answered",
+  "timestamp": "2024-03-15T14:00:00.000Z",
+  "lead_id": "{{leadIdNA}}",
+  "attempt_no": 1
+}
+
+###
+### 16. Get Call by ID
+###
+GET {{baseUrl}}/calls/{{callId}}
+
+###
+### 17. Simulate Happy Path
+###
+POST {{baseUrl}}/dev/simulate-happy-path
+Content-Type: application/json
+
+{
+  "manager_id": "{{managerId}}",
+  "lead_id": "{{leadIdNA}}"
+}
+
+###
+### 18. Simulate Call (Full Conversation)
+###
+POST {{baseUrl}}/dev/simulate-call
+Content-Type: application/json
+
+{
+  "manager_id": "{{managerId}}",
+  "lead_id": "{{leadIdNA}}",
+  "script": [
+    { "text": "Hello?", "state": "IdentifyContact" },
+    { "text": "Yes, I have a few minutes", "state": "ConsentGate" },
+    { "text": "Yes, I am the decision maker", "state": "Qualify" },
+    { "text": "We have an urgent need this quarter", "state": "Qualify" },
+    { "text": "We have budget approved", "state": "Qualify" },
+    { "text": "Option 1 works for me", "state": "ProposeTime" },
+    { "text": "Yes, confirm it", "state": "Confirm" }
+  ]
+}
+
+###
+### 19. Get CRM Task (via /bookings endpoint)
+###
+GET {{baseUrl}}/bookings/{{bookingId}}
+
+###
+### 20. Create CRM Task
+###
+POST {{baseUrl}}/crm/tasks
+Content-Type: application/json
+
+{
+  "booking_id": "{{bookingId}}",
+  "lead_id": "{{leadIdNA}}",
+  "contact_id": null,
+  "manager_id": "{{managerId}}",
+  "outcome": "booked",
+  "qualification_flags": {
+    "authority": true,
+    "need": "high"
+  },
+  "notes": "Test booking",
+  "call_id": "{{callId}}",
+  "meeting_id": "meeting-test-123",
+  "created_ts": "2024-03-15T14:00:00.000Z",
+  "consent_status": "granted"
+}
+

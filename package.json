@@ -1,0 +1,16 @@
+{
+  "name": "ai-outbound-booking",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@8.15.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter orchestrator dev",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "format": "pnpm -r format"
+  }
+}
+
